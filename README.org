@@ -1,0 +1,94 @@
+#+Title:        Firetower README
+#+AUTHOR:       Avdi Grimm
+#+EMAIL:        avdi@avdi.org
+
+# Configuration:
+#+STARTUP:      odd
+#+STARTUP:      hi
+#+STARTUP:      hidestars
+
+* Firetower
+
+  A command-line interface to the Campfire API
+  (http://developer.37signals.com/campfire/) by [[mailto:avdi@avdi.org][Avdi Grimm]]
+
+  URL: http://github.com/avdi/firetower
+
+*** Requirements
+
+    - Linux (somebody please port this to OSX/Win32!)
+    - [[http://www.kfish.org/software/xsel/][xsel]]
+    - [[apt:libnotify-bin][libnotify-bin]]
+
+*** Install
+
+    : sudo gem install firetower
+    : firetower setup
+
+*** Configuration
+    Edit $HOME/.firetower/firetower.conf
+
+    All configuration is done in Ruby. The context is a Firetower::Sesson
+    object. You can add handlers for events:
+
+    : receive do |session, event| ... end
+
+    Or enable plugins:
+
+    : use NotifyPlugin
+
+*** A simple bot
+    Drop this in ~/.firetower/firetower.conf for a simple (and VERY UNSAFE!) demo
+    of a Campfire bot which will eval arbitrary Ruby code:
+
+#+BEGIN_SRC ruby
+  receive do |session, event|
+    if event['type'] == 'TextMessage' && event['body'] =~ /^!eval (.*)$/
+      event.room.account.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
+    end
+  end
+#+END_SRC
+
+*** Usage
+***** Say something in campfire
+      : firetower say 'blah blah blah'
+***** Say something to a non-default room
+      : firetower say subdomain='mycompany' room='Water Cooler' 'blah blah blah'
+***** Paste a code snippet into campfire
+      : firetower paste < hello.rb
+***** Paste from the clipboaord
+      : firetower paste --from=clip
+***** Paste the selected text
+      : firetower paste --from=sel
+***** Start server (for notifications, bots, etc.)
+      : firetower start
+***** Stop server
+      : firetower stop
+
+*** Advanced
+***** A simple bot
+
+*** License
+
+(The MIT License)
+
+Copyright (c) 2010 Avdi Grimm
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -1,0 +1,22 @@
+# <%= program %> configuration initially generated <%= Time.now %>
+
+# Go ahead and customize this file to your heart's content! The content is Ruby
+# code, and all code is evaluated in the context of a Firetower::Session object.
+
+# CONNECTIONS
+
+# You can connect to as many Campfire accounts as you like :-)
+account '<%= subdomain %>', '<%= token %>', :ssl => <%= use_ssl %>
+
+# ROOMS
+# Activity in these rooms will tracked by the <%= program %> server
+
+<% room_names.each do |room_name| %>
+join '<%= subdomain %>', '<%= room_name %>'
+<% end %>
+
+# DEFAULT ROOM
+default '<%= subdomain %>', '<%= room_names.first %>'
+
+# Plugins
+use NotifyPlugin
