@@ -9,6 +9,8 @@
 
 * Firetower
 
+  [[file:images/BaldMountainLookout.jpg]]
+
   A command-line interface to the Campfire API
   (http://developer.37signals.com/campfire/) by [[mailto:avdi@avdi.org][Avdi Grimm]]
 
@@ -64,9 +66,6 @@
       : firetower start
 ***** Stop server
       : firetower stop
-
-*** Advanced
-***** A simple bot
 
 *** License
 
