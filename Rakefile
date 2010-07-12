@@ -14,6 +14,8 @@ Bones {
   email    'avdi@avdi.org'
   url      'http://github.com/avdi/firetower'
 
+  summary "A command-line interface to Campfire chats"
+
   readme_file 'README.org'
 
   depend_on 'twitter-stream',   '~> 0.1.6'

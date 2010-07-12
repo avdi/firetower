@@ -4,9 +4,55 @@ require File.expand_path(
     File.join(File.dirname(__FILE__), %w[.. lib firetower]))
 
 Main do
-  description "Interact with Campfire chat rooms"
+  description <<-"END"
+    A command-line interface to Campfire chats.
+
+    #{program} provides two primary services: a command-line syntax for posting
+    messages and code pastes to a Campfire chat room; and a daemon which can
+    monitor any number of Campfire rooms on multiple accounts and take
+    configurable actions when chat room events occur. Both usage modes share a
+    common simple Ruby-based configuration file.
+  END
 
   author 'Avdi Grimm <avdi@avdi.org>'
+
+  examples [
+    "#{program} setup",
+    "#{program} say 'hello, Campfire'",
+    "#{program} say subdomain=mycompany room='Watercooler' 'hello room'",
+    "echo 'hello, Campfire' | #{program} say",
+    "#{program} paste '2+2 => 4'",
+    "#{program} paste subdomain=mycompany room='Watercooler' 'foobar'",
+    "#{program} paste --from=sel",
+    "#{program} paste --from=clip",
+    "#{program} paste --from=file hello.rb",
+    "#{program} paste --from=stdin < hello.rb",
+    "#{program} start",
+    "#{program} stop"
+  ]
+
+  usage["CONFIGURATION"] = <<-"END"
+    #{program} is configured by editing the file
+    $HOME/.firetower/firetower.conf. The file consists of Ruby code which is
+    evaluated in the context of a Firetower::Session object. You can generate a
+    starter configuration by running '#{program} setup'.
+
+    In addition to setting up accounts and rooms and enabling plugins, the
+    config file can also be used to attach arbitrary event handlers to Campfire
+    events. For instance, the following code plays a sound when someone says
+    something in Campfire:
+
+      receive do |session, event|
+        if event['type'] == 'TextMessage'
+          system 'paplay ding.wav'
+        end
+      end
+
+    The event hooks are HookR events (http://hookr.rubyforge.org), so any number
+    of handlers can be stacked on a given event. And more advanced usage are
+    possible; for instance, you can attach a Listener object to receive all
+    types of events. In fact, this last is how plugins are implemented.
+  END
 
   fattr(:config_path) { dir + 'firetower.conf'   }
   fattr(:log_path)    { dir + 'firetower.log' }
@@ -234,6 +280,10 @@ EOS
     end
   end
 
+  def run
+    help!
+  end
+
   def firetower_daemon
     Servolux::Daemon.new(
       :name            => File.basename($PROGRAM_NAME),
@@ -281,4 +331,6 @@ EOS
     end
   end
 end
+
+
 

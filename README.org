@@ -18,7 +18,7 @@
 
 *** Requirements
 
-    - Linux (somebody please port this to OSX/Win32!)
+    - Linux (somebody please port this to OS X)
     - [[http://www.kfish.org/software/xsel/][xsel]]
     - [[apt:libnotify-bin][libnotify-bin]]
 
@@ -26,30 +26,6 @@
 
     : sudo gem install firetower
     : firetower setup
-
-*** Configuration
-    Edit $HOME/.firetower/firetower.conf
-
-    All configuration is done in Ruby. The context is a Firetower::Sesson
-    object. You can add handlers for events:
-
-    : receive do |session, event| ... end
-
-    Or enable plugins:
-
-    : use NotifyPlugin
-
-*** A simple bot
-    Drop this in ~/.firetower/firetower.conf for a simple (and VERY UNSAFE!) demo
-    of a Campfire bot which will eval arbitrary Ruby code:
-
-#+BEGIN_SRC ruby
-  receive do |session, event|
-    if event['type'] == 'TextMessage' && event['body'] =~ /^!eval (.*)$/
-      event.room.account.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
-    end
-  end
-#+END_SRC
 
 *** Usage
 ***** Say something in campfire
@@ -67,6 +43,72 @@
 ***** Stop server
       : firetower stop
 
+*** Configuration
+    Edit $HOME/.firetower/firetower.conf
+
+    All configuration is done in Ruby. The context is a Firetower::Sesson
+    object. You can add handlers for events:
+
+    : receive do |session, event| ... end
+
+    Or enable plugins:
+
+    : use NotifyPlugin
+
+***** A simple bot
+    Drop this in ~/.firetower/firetower.conf for a simple (and VERY UNSAFE!) demo
+    of a Campfire bot which will eval arbitrary Ruby code whenever someone
+    prefaces a message with "!eval":
+
+#+BEGIN_SRC ruby
+  receive do |session, event|
+    if event['type'] == 'TextMessage' && event['body'] =~ /^!eval (.*)$/
+      event.room.account.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
+    end
+  end
+#+END_SRC
+
+  The event hooks are [[http://hookr.rubyforge.org][HookR]] events, so any number of handlers can be stacked on
+  a given event. And more advanced usage are possible; for instance, you can
+  attach a Listener object to receive all types of events. In fact, this last is
+  how plugins are implemented.
+
+*** Plugin API
+  If you want to write your own Firetower plugins, you should create a gem
+  that contains a path something like this:
+
+    : lib/firetower/plugins/my_awesome_plugin/init_v1.rb
+
+  Firetower will load the init_v1.rb file on startup. Typically, a plugin
+  will define a Firetower::Session::Listener class (or more than one) in the
+  Firetower::Plugins namespace:
+
+#+BEGIN_SRC ruby
+  module Firetower
+    module Plugins
+      class MyAwesomePlugin < Firetower::Session::Listener
+        def startup(session)
+          # Some one-time startup code...
+        end
+
+        def receive(session, event)
+          # Some event-handling code...
+        end
+      end
+    end
+  end
+#+END_SRC
+
+  Users can then enable your plugin by installing your gem and adding a line
+  line to their firetower.conf:
+
+#+BEGIN_SRC ruby
+  use MyAwesomePlugin
+#+END_SRC
+
+*** Not yet implemented:
+***** TODO Join/leave rooms when subscribing/unsubscribing
+***** TODO Fire all defined hooks, including :shutdown and :leave
 *** License
 
 (The MIT License)
