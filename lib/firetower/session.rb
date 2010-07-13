@@ -19,7 +19,7 @@ module Firetower
     define_hook :connect, :session, :account
     define_hook :join, :session, :room
     define_hook :receive, :session, :event
-    define_hook :error, :session, :description
+    define_hook :error, :session, :error
     define_hook :leave, :session, :room
     define_hook :disconnect, :session, :account
     define_hook :shutdown, :session
@@ -71,9 +71,9 @@ module Firetower
       @default_room ||= @subscribed_rooms.first
     end
 
-    def post(subdomain, path, data)
+    def post(subdomain, path, data=nil)
       request = Net::HTTP::Post.new(path)
-      request.body = data.to_json
+      request.body = data.to_json if data
       request['Content-Type'] = 'application/json'
       perform_request(subdomain, request)
     end
@@ -98,7 +98,9 @@ module Firetower
     end
 
     def close!
-      # TODO
+      accounts.values.each do |account|
+        account.close!
+      end
     end
   end
 end

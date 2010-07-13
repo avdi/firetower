@@ -26,11 +26,16 @@ module Firetower
           subscribe_to_room(room)
         end
       end
+      @logger.info "Finished processing events; closing session"
       session.close!
+      @logger.info "Session closed"
     end
 
     def subscribe_to_room(room)
       @logger.info "Subscribing to #{room}"
+
+      room.account.join!(room.name)
+
       stream = Twitter::JSONStream.connect(
         :path => "/room/#{room.id}/live.json",
         :host => 'streaming.campfirenow.com',
@@ -45,8 +50,9 @@ module Firetower
       end
 
       stream.on_error do |message|
-        @logger.error message
-        session.execute_hook(:error, session, message)
+        error = RuntimeError.new(message)
+        @logger.error error.message
+        session.execute_hook(:error, error)
       end
 
       stream.on_max_reconnects do |timeout, retries|
@@ -55,7 +61,6 @@ module Firetower
           "Unable to connect after #{retries} attempts")
         stop_event_loop
       end
-      session.execute_hook(:join, session, room)
     end
 
   end

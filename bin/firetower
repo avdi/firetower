@@ -213,16 +213,16 @@ Main do
     def run
       if detach
         firetower_daemon.startup
+        puts "Firetower is vigilantly scanning the treetops"
       else
         logger ::Logger.new($stdout)
         start_server(:logger => logger)
       end
-      puts "Firetower is vigilantly scanning the treetops"
     end
   end
 
   mode :stop do
-    description "Start the listener daemon"
+    description "Stop the listener daemon"
 
     def run
       firetower_daemon.shutdown

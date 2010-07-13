@@ -11,6 +11,7 @@ module Firetower
         data = session.get(subdomain, "/users/#{user_id}.json")
         cache[user_id] = data['user']
       end
+      @joined_rooms = []
     end
 
     def rooms
@@ -43,6 +44,28 @@ module Firetower
           'type' => 'PasteMessage'
         }
       })
+    end
+
+    def join!(room_name)
+      room = rooms[room_name]
+      session.post(subdomain, "/room/#{room.id}/join.json")
+      @joined_rooms << room
+      session.logger.info "Joined room #{subdomain}/#{room_name}"
+      session.execute_hook(:join, session, room)
+    end
+
+    def leave!(room_name)
+      room = rooms[room_name]
+      session.post(subdomain, "/room/#{room.id}/leave.json")
+      @joined_rooms.delete(room)
+      session.logger.info "Left room #{subdomain}/#{room_name}"
+      session.execute_hook(:leave, session, room)
+    end
+
+    def close!
+      @joined_rooms.each do |room|
+        leave!(room.name)
+      end
     end
 
     def ssl?

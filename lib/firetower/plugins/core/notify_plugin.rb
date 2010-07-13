@@ -4,12 +4,16 @@ module Firetower
 
       def startup(session)
         if session.kind == :server
-          notify("Firetower", "Firetower is vigilant!")
+          notify("Firetower", "Firetower is vigilantly scanning the treetops")
         end
       end
 
       def join(session, room)
         notify("Firetower", "Joined room \"#{room.name}\"")
+      end
+
+      def leave(session, room)
+        notify("Firetower", "Left room \"#{room.name}\"")
       end
 
       def receive(session, event)
@@ -22,8 +26,8 @@ module Firetower
         end
       end
 
-      def error(session, description)
-        notify("Campfire Error", description)
+      def error(session, error)
+        notify("Campfire Error", error.message)
       end
 
       private
@@ -31,7 +35,7 @@ module Firetower
       def notify(*args)
         system('notify-send', '--icon',
           File.expand_path(
-            '../images/campfire-logo-for-fluid.png',
+            'campfire-logo-for-fluid.png',
             File.dirname(__FILE__)),
           '-c', 'Firetower',
           *args) or raise "Desktop notification failed"
