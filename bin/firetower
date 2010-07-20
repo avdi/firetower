@@ -254,7 +254,7 @@ Please enter your Campfire API token. You can find your token at
 http://#{subdomain}.campfirenow.com/member/edit
 EOS
       use_ssl    = hl.agree("Use SSL when connecting to Campfire?")
-      rooms_url  = "http#{use_ssl ? '?' : ''}://#{subdomain}.campfirenow.com/rooms.json"
+      rooms_url  = "http#{use_ssl ? 's' : ''}://#{subdomain}.campfirenow.com/rooms.json"
       response   = open(rooms_url, :http_basic_authentication => [token, 'x']).read
       room_list  = JSON.parse(response)['rooms']
       room_names = []
