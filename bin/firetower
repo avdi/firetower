@@ -240,6 +240,10 @@ Main do
 A configuration already exists at #{config_path}. Are you sure you want to
 overwrite it?
 EOS
+      exit_failure if RUBY_PLATFORM =~ /darwin/ and !system('growlnotify -v') and !(puts(<<"EOS"))
+You must first install growlnotify from the Growl package installer and ensure 
+'Listen for incoming notifications' is checked in the Preference pane.
+EOS
       subdomain = hl.ask <<EOS
 What is your Campfire subdomain? If your Campfire address is
 http://mycompany.campfirenow.com, your subdomain is "mycompany" (without the
