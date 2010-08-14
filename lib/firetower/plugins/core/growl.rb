@@ -9,11 +9,9 @@ module Firetower
 
       def join(session, room)
         notify("Firetower", "Joined room \"#{room.name}\"", room.name)
-        # notify("Firetower", "Joined room \\"#{room.name}\\"")
       end
 
       def leave(session, room)
-        # notify("Firetower", "Left room \\"#{room.name}\\"")
         notify("Firetower", "Left room \"#{room.name}\"", room.name)
       end
 
@@ -28,13 +26,12 @@ module Firetower
       end
 
       def error(session, error)
-        notify("Campfire Error", error.message) #, 'Error')
+        notify("Campfire Error", error.message, 'Error')
       end
 
       private
 
       def notify(*args)
-        # system 'growlnotify' ,'-m', args.last
         system('growlnotify', '-t', (args[2].nil? ? args[0] : "#{args[0]} - #{args[2]}"), 
           '-m', args[1], 
           '--image', File.expand_path('campfire-logo-for-fluid.png', File.dirname(__FILE__))) \
