@@ -75,14 +75,14 @@ Main do
       optional
       attr
     end
-    keyword :room_name do
+    keyword :room do
       optional
       attr
     end
 
     def selected_room(session)
-      if params[:subdomain].given? && params[:room_name].given?
-        session.accounts[subdomain].rooms[room_name]
+      if params[:subdomain].given? && params[:room].given?
+        session.accounts[subdomain].rooms[params[:room].values[0]]
       else
         session.default_room
       end
