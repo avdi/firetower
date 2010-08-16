@@ -18,9 +18,13 @@
 
 *** Requirements
 
-    - Linux (somebody please port this to OS X)
+    Linux 
     - [[http://www.kfish.org/software/xsel/][xsel]]
     - [[apt:libnotify-bin][libnotify-bin]]
+
+    OS X
+    - growlnotify package from the Extras folder in Growl-1.x.y.dmg
+    - 'Listen for incoming notifications' is checked in the Growl Preference Pane
 
 *** Install
 

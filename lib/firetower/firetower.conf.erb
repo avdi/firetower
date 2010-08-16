@@ -19,4 +19,8 @@ join '<%= subdomain %>', '<%= room_name %>'
 default '<%= subdomain %>', '<%= room_names.first %>'
 
 # Plugins
-use NotifyPlugin
+<% if RUBY_PLATFORM =~ /darwin/ %>
+  use GrowlPlugin
+<% else %>
+  use NotifyPlugin
+<% end %>
