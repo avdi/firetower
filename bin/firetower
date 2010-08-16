@@ -280,6 +280,26 @@ EOS
     end
   end
 
+  mode :log do
+    mode :tail do
+      description "Live view of the server log"
+
+      def run
+        exec('tail', '-f', log_path.to_s)
+      end
+    end
+
+    mode :view do
+      description "Open server log in $PAGER"
+
+      def run
+        exec(
+          ENV.fetch('PAGER'){ENV.fetch('EDITOR'){'less'}},
+          log_path.to_s)
+      end
+    end
+  end
+
   def run
     help!
   end
