@@ -1,4 +1,9 @@
-== 1.0.0 / 2010-06-02
+== 0.0.4 / 2010-08-18
+
+* 1 major enhancement
+  * Mac/Growl support (davidrogers)
+
+== 0.0.1 / 2010-06-02
 
 * 1 major enhancement
   * Birthday!
