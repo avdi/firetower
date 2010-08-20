@@ -12,6 +12,7 @@ module Firetower
     attr_reader :subscribed_rooms
     attr_reader :kind
     attr_reader :default_room
+    attr_reader :ignore_list
 
     attr_accessor :logger
 
@@ -28,6 +29,7 @@ module Firetower
       @accounts = Hash.new do |hash, subdomain|
         raise "Unknown subdomain '#{subdomain}'"
       end
+      @ignore_list = []
       @connections = Hash.new do |hash, subdomain|
         connection =
           if accounts[subdomain].ssl?
@@ -50,6 +52,9 @@ module Firetower
       accounts[subdomain] = Account.new(subdomain, token, self, options)
     end
 
+    def ignore(*names)
+      @ignore_list.concat names
+    end
     # Enable a plugin or extension
     def use(class_or_instance, *args)
       case class_or_instance
