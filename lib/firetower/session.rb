@@ -1,13 +1,14 @@
+require 'firetower/accounts'
+
 module Firetower
   module Plugins
   end
 
   class Session
     include ::Firetower::Plugins
-
     include HookR::Hooks
+    include Firetower::Accounts
 
-    attr_reader :accounts
     attr_reader :connections
     attr_reader :subscribed_rooms
     attr_reader :kind
@@ -26,9 +27,6 @@ module Firetower
     define_hook :shutdown, :session
 
     def initialize(kind=:command, options={})
-      @accounts = Hash.new do |hash, subdomain|
-        raise "Unknown subdomain '#{subdomain}'"
-      end
       @ignore_list = []
       @connections = Hash.new do |hash, subdomain|
         connection =
@@ -47,11 +45,6 @@ module Firetower
       @logger = options.fetch(:logger) { ::Logger.new($stderr) }
     end
 
-    # Declare an account
-    def account(subdomain, token, options={})
-      accounts[subdomain] = Account.new(subdomain, token, self, options)
-    end
-
     def ignore(*names)
       @ignore_list.concat names
     end
@@ -61,10 +54,6 @@ module Firetower
       when Class then add_listener(class_or_instance.new(*args))
       else add_listener(class_or_instance)
       end
-    end
-
-    def join(subdomain, room_name)
-      @subscribed_rooms << accounts[subdomain].rooms[room_name]
     end
 
     # Set default room
