@@ -1,7 +1,5 @@
 module Firetower
   module Accounts
-    include HookR::Hooks
-
     fattr(:account_fetcher) {
       Account.method(:new)
     }
@@ -11,7 +9,20 @@ module Firetower
       end
     }
 
-    define_hook :new_account, :subdomain, :token, :options
+    # Eventually advances to HookR will render all this reduundant
+    def self.extended(other)
+      class << other
+        include HookR::Hooks
+        define_hook :new_account, :subdomain, :token, :options
+      end
+    end
+
+    def self.included(other)
+      other.module_eval do
+        include HookR::Hooks
+        define_hook :new_account, :subdomain, :token, :options
+      end
+    end
 
     # Declare an account
     def account(subdomain, token, options={})

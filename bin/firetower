@@ -4,6 +4,15 @@ require File.expand_path(
     File.join(File.dirname(__FILE__), %w[.. lib firetower]))
 
 Main do
+  $:.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
+  plugin_pattern = File.expand_path('../lib/firetower/plugins/*/init_v1.rb', File.dirname(__FILE__))
+  Dir.glob(plugin_pattern).each do |file|
+    eval(File.read(file))
+  end
+  Gem.find_files('firetower/plugins/*/init_v1.rb') do |file|
+    eval(File.read(file))
+  end
+
   description <<-"END"
     A command-line interface to Campfire chats.
 
@@ -241,7 +250,7 @@ A configuration already exists at #{config_path}. Are you sure you want to
 overwrite it?
 EOS
       exit_failure if RUBY_PLATFORM =~ /darwin/ and !system('growlnotify -v') and !(puts(<<"EOS"))
-You must first install growlnotify from the Growl package installer and ensure 
+You must first install growlnotify from the Growl package installer and ensure
 'Listen for incoming notifications' is checked in the Preference pane.
 EOS
       subdomain = hl.ask <<EOS
@@ -343,7 +352,7 @@ EOS
 
   def before_run
     self.logger.level = ::Logger::INFO
-    load_plugins!
+    # load_plugins!
     dir.mkpath
   end
 

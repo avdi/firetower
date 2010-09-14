@@ -24,7 +24,10 @@ Bones {
   depend_on 'addressable',      '~> 2.1'
   depend_on 'main',             '~> 4.2'
   depend_on 'servolux',         '~> 0.9.4'
-  depend_on 'hookr',            '~> 1.0'
+  depend_on 'hookr',            '~> 1.1'
   depend_on 'highline',         '~> 1.5'
+  depend_on 'yammer4r',         '~> 0.1.5'
+  depend_on 'oauth',            '~> 0.4.3'
+  depend_on 'launchy'
 }
 
