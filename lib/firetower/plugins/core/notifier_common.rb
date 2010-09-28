@@ -33,6 +33,9 @@ module Firetower
         when "TextMessage"
           user = event.room.account.users[event['user_id']]
           @notifier.call(user['name'], event['body'], event.room.name) unless ignored?(user['name'])
+        when "EnterMessage"
+          user = event.room.account.users[event['user_id']]
+          @notifier.call(user['name'], 'joined the room', event.room.name) unless ignored?(user['name'])
         else
           # NOOP
         end
