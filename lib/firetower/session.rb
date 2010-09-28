@@ -8,6 +8,7 @@ module Firetower
     include ::Firetower::Plugins
     include HookR::Hooks
     include Firetower::Accounts
+    include Firetower::Rooms
 
     attr_reader :connections
     attr_reader :subscribed_rooms

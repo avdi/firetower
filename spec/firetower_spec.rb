@@ -56,7 +56,7 @@ describe Firetower do
       end
 
       it "should be able to add a room subscription" do
-        expect { subject.join "example.com", "room1" }.
+        expect { subject.join_room "example.com", "room1" }.
           to change{subject.subscribed_rooms.size}.by(1)
       end
     end
@@ -85,6 +85,11 @@ describe Firetower do
       it "should not notify on message from ignored user" do
         notifier.should_not_receive(:call)
         event["user_id"] = 456
+        subject.receive(nil,event)
+      end
+      it "should notify on unignored user join" do
+        notifier.should_receive(:call)
+        event['type'] = 'EnterMessage'
         subject.receive(nil,event)
       end
     end
