@@ -45,6 +45,16 @@ module Firetower
         }
       })
     end
+    
+    def play!(room_name, text)
+      room_id = rooms[room_name].id
+      session.post(subdomain, "/room/#{room_id}/speak.json", {
+        'message' => {
+          'body' => text,
+          'type' => 'SoundMessage'
+        }
+      })
+    end
 
     def join!(room_name)
       room = rooms[room_name]
