@@ -103,7 +103,15 @@ Main do
     mixin :address
     argument :text do
       optional
-      attr{|text| text.given? ? text.value : $stdin.read }
+      attr do |text|
+        if text.given?
+          text.value
+        else
+          stdin = $stdin.read
+          # get rid of trailing newline if there's just one of them. this avoid pasting to the room instead of saying when piping output
+          stdin.chomp if stdin.scan(/\n/).size == 1 
+        end
+      end
     end
 
     def run
