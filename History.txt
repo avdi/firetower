@@ -1,3 +1,8 @@
+== 0.0.5 / 2011-07-06
+ 
+ * 1 minor enhancement
+  * better support for piping output to `firetower say` (technicalpickles, #6)
+
 == 0.0.4 / 2010-08-18
 
 * 1 major enhancement
