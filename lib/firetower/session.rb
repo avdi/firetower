@@ -97,5 +97,19 @@ module Firetower
         account.close!
       end
     end
+
+    # This is here just for backwards compability. 0.0.3 introduced the 'join' hook, and renamed the existing session config 'join' to 'join_name'. This supports both.
+    def join(subdomain = nil, room_name = nil, &block)
+      #raise "#{su}: #{caller[0]}"
+
+      if subdomain && room_name && !subdomain.kind_of?(Firetower::Session) && !room_name.kind_of?(Firetower::Room)
+        warn "WARNING: `join` is deprecated. use `join_room` instead: #{Kernel.caller.first.gsub(/:in .*$/, '')}"
+        join_room(subdomain, room_name)
+      else
+        # gross, copy pasta from hookr
+        add_callback(:join, subdomain, &block)
+      end
+    end
+
   end
 end
