@@ -1,6 +1,8 @@
-== 0.0.7 / 2011-07-06
- * 1 bug fix
+== 0.0.8 / 2011-07-06
+
+ * 2 bug fixes
   * fix backwards compatibility to 0.0.3 with firetower.conf syntax
+  * updated generated firetower.conf to use `join_room`
 
 == 0.0.5 / 2011-07-06
  
