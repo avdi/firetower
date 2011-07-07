@@ -30,6 +30,7 @@ Main do
     "#{program} say 'hello, Campfire'",
     "#{program} say subdomain=mycompany room='Watercooler' 'hello room'",
     "echo 'hello, Campfire' | #{program} say",
+    "#{program} play live",
     "#{program} paste '2+2 => 4'",
     "#{program} paste subdomain=mycompany room='Watercooler' 'foobar'",
     "#{program} paste --from=sel",
@@ -94,6 +95,22 @@ Main do
         session.accounts[subdomain].rooms[params[:room].values[0]]
       else
         session.default_room
+      end
+    end
+  end
+
+  mode :play do
+    description "Play a sound in a campfire chat room"
+    mixin :address
+    argument :sound do
+      required
+      attr
+    end
+
+    def run
+      with_session do |session|
+        room = selected_room(session)
+        room.account.play!(room.name, sound)
       end
     end
   end
