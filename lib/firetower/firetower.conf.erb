@@ -12,7 +12,7 @@ account '<%= subdomain %>', '<%= token %>', :ssl => <%= use_ssl %>
 # Activity in these rooms will tracked by the <%= program %> server
 
 <% room_names.each do |room_name| %>
-join '<%= subdomain %>', '<%= room_name %>'
+join_room '<%= subdomain %>', '<%= room_name %>'
 <% end %>
 
 # DEFAULT ROOM
