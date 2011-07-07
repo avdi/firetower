@@ -1,12 +1,13 @@
+require "rubygems"
+require "bundler"
+Bundler.setup(:default, :rake)
 
-begin
-  require 'bones'
-rescue LoadError
-  abort '### Please install the "bones" gem ###'
-end
+require 'bones'
+require 'bones/plugins/git'
+require 'bones/plugins/rspec'
 
-task :default => 'test:run'
-task 'gem:release' => 'test:run'
+task :default => 'spec:run'
+task 'gem:release' => 'spec:run'
 
 Bones {
   name  'firetower'
