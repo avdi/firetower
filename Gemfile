@@ -3,6 +3,7 @@ source :rubygems
 group :rake do
   gem 'bones'
   gem 'bones-git'
+  gem 'rspec', '~> 1.3.1'
   gem 'bones-rspec'
 end
 
@@ -18,3 +19,4 @@ gem 'highline',         '~> 1.5'
 gem 'yammer4r',         '~> 0.1.5'
 gem 'oauth',            '~> 0.4.3'
 gem 'launchy'
+
