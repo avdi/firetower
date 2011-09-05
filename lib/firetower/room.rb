@@ -11,5 +11,9 @@ module Firetower
     def to_s
       "#{account.subdomain}/#{id} (#{name})"
     end
+
+    def say!(message)
+      account.say!(name, message)
+    end
   end
 end

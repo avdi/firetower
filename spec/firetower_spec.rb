@@ -62,6 +62,22 @@ describe Firetower do
     end
   end
 
+  describe Firetower::Room do
+    subject do
+      it = Firetower::Room.new(account, 'id' => '1234', 'name' => 'awesome')
+    end
+
+    let(:account) do
+      mock(:account)
+    end
+
+    it "has short cut for say" do
+      account.should_receive(:say!).with('awesome', 'woooooot')
+
+      subject.say! 'woooooot'
+    end
+  end
+
   shared_examples_for "Notifier Plugins" do
 
     context "given an ignore list" do
