@@ -71,10 +71,22 @@ describe Firetower do
       mock(:account)
     end
 
-    it "has short cut for say" do
+    it "has shortcut for say" do
       account.should_receive(:say!).with('awesome', 'woooooot')
 
       subject.say! 'woooooot'
+    end
+
+    it "has shortcut for paste" do
+      account.should_receive(:paste!).with('awesome', 'woooooot')
+
+      subject.paste! 'woooooot'
+    end
+
+    it "has shortcut for play" do
+      account.should_receive(:play!).with('awesome', 'woooooot')
+
+      subject.play! 'woooooot'
     end
   end
 

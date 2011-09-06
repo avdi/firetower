@@ -15,5 +15,13 @@ module Firetower
     def say!(message)
       account.say!(name, message)
     end
+
+    def paste!(message)
+      account.paste!(name, message)
+    end
+    
+    def play!(message)
+      account.play!(name, message)
+    end
   end
 end
