@@ -41,11 +41,12 @@ module Firetower
         :host => 'streaming.campfirenow.com',
         :auth => "#{room.account.token}:x")
 
-      stream.each_item do |event|
-        @logger.info "Processing event:\n  #{event}"
-        event = JSON.parse(event)
+      stream.each_item do |json|
+        @logger.info "Processing event:\n  #{json}"
 
-        (class << event; self; end).send(:define_method, :room){room}
+        event = Firetower::Event.parse(json)
+        event.room = room
+
         session.execute_hook(:receive, session, event)
       end
 
