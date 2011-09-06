@@ -72,7 +72,7 @@
 #+BEGIN_SRC ruby
   receive do |session, event|
     if event.text? && event =~ /^!eval (.*)$/
-      event.room.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
+      event.room.paste! "Eval result:\n" + eval($1).to_s
     end
   end
 #+END_SRC
