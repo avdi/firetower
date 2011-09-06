@@ -12,7 +12,8 @@
   [[file:images/BaldMountainLookout.jpg]]
 
   A command-line interface to the Campfire API
-  (http://developer.37signals.com/campfire/) by [[mailto:avdi@avdi.org][Avdi Grimm]]
+  (http://developer.37signals.com/campfire/) by [[mailto:avdi@avdi.org][Avdi Grimm]].
+  Also, a pretty simple way to create a Campfire bot.
 
   URL: http://github.com/avdi/firetower
 
@@ -31,7 +32,7 @@
     : sudo gem install firetower
     : firetower setup
 
-*** Usage
+*** Command Usage
 ***** Say something in campfire
       : firetower say 'blah blah blah'
 ***** Say something to a non-default room
@@ -48,26 +49,30 @@
       : firetower stop
 
 *** Configuration
+
     Edit $HOME/.firetower/firetower.conf
 
     All configuration is done in Ruby. The context is a Firetower::Sesson
     object. You can add handlers for events:
 
-    : receive do |session, event| ... end
+    : receive do |session, event|
+    : ...
+    : end
 
     Or enable plugins:
 
     : use NotifyPlugin
 
-***** A simple bot
+***** Creating a bot
+
     Drop this in ~/.firetower/firetower.conf for a simple (and VERY UNSAFE!) demo
     of a Campfire bot which will eval arbitrary Ruby code whenever someone
     prefaces a message with "!eval":
 
 #+BEGIN_SRC ruby
   receive do |session, event|
-    if event['type'] == 'TextMessage' && event['body'] =~ /^!eval (.*)$/
-      event.room.account.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
+    if event.text? && event =~ /^!eval (.*)$/
+      event.room.paste!(event.room.name, "Eval result:\n" + eval($1).to_s)
     end
   end
 #+END_SRC
