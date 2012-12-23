@@ -2,6 +2,8 @@ require 'firetower/plugins/yamfire/yamfire.rb'
 require 'yaml/store'
 require 'launchy'
 require 'oauth/signature/plaintext'
+require 'action_view'
+require 'hirb'
 
 mode "yammer" do
   fattr(:yammer_config_path) { dir + "yammer.conf" }
@@ -9,17 +11,17 @@ mode "yammer" do
     YAML::Store.new(yammer_config_path.to_s)
   }
   fattr(:yammer_client) {
-    yammer_config.transaction(true) do |config|
+#    yammer_config.transaction(true) do |config|
       Yammer::Client.new(
         :consumer => {
           :key    => Firetower::Plugins::Yamfire::CONSUMER_KEY,
           :secret => Firetower::Plugins::Yamfire::CONSUMER_SECRET
         },
         :access   => {
-          :token  => config[:credentials][:token],
-          :secret => config[:credentials][:secret]
+          :token  => yammer_config[:credentials][:token],
+          :secret => yammer_config[:credentials][:secret]
         })
-    end
+#    end
   }
   fattr(:yammer_user_cache) {
     Hash.new do |hash, key|
@@ -76,6 +78,36 @@ mode "yammer" do
 
     def run
       yammer_client.message(:post, :body => params["body"].value)
+    end
+  end
+
+  mode "who" do
+    description "List Yammer users and status"
+
+    def run
+      yammer_config.transaction do |config|
+        users = (config[:users] ||= yammer_client.users)
+      renderer = Object.new
+      renderer.extend(ActionView::Helpers::DateHelper)
+      users.each do |user|
+        messages = yammer_client.messages(:from_user, :id => user.id)
+        most_recent_message = messages.sort_by{|m| DateTime.parse(m.created_at)}.last
+        user[:last_status] = most_recent_message.body.parsed
+        user[:last_seen]   = DateTime.parse(most_recent_message.created_at)
+      end
+      puts Hirb::Helpers::AutoTable.render(
+        users,
+        :fields => [:name, :full_name, :last_seen,  :last_status],
+        :filters => {
+          :last_seen => lambda{|t| renderer.distance_of_time_in_words(Time.now - t)}
+        },
+        # :headers => {
+        #   :key    => "Key",
+        #   :value  => "Value",
+        #   :source => "Source"
+        # },
+        :description => false) + "\n"
+      end
     end
   end
 end

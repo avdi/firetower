@@ -1,7 +1,15 @@
+require 'firetower/errors'
 require 'firetower/accounts'
 
 module Firetower
   module Plugins
+  end
+
+  def with_firetower_session(program, kind=:command, options={})
+    session = ::Firetower::Session.new(kind, options)
+    session.execute_hook(:startup, session)
+    yield session
+    session.execute_hook(:shutdown, session)
   end
 
   class Session
@@ -95,6 +103,14 @@ module Firetower
     def close!
       accounts.values.each do |account|
         account.close!
+      end
+    end
+
+    def load_user_config!(config_path)
+      if config_path.exist?
+        session.instance_eval(config_path.read, config_path.to_s, 1)
+      else
+        raise UserError, "Please run '#{program} setup' to configure #{program}"
       end
     end
   end

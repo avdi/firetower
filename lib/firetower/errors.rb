@@ -1,0 +1,3 @@
+module FireTower
+
+end

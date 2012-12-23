@@ -1,19 +1,22 @@
 #!/usr/bin/env ruby
 
 require File.expand_path(
-    File.join(File.dirname(__FILE__), %w[.. lib firetower]))
+  File.join(File.dirname(__FILE__), %w[.. lib firetower]))
 
-Main do
-  $:.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
-  plugin_pattern = File.expand_path('../lib/firetower/plugins/*/init_v1.rb', File.dirname(__FILE__))
-  Dir.glob(plugin_pattern).each do |file|
-    eval(File.read(file))
-  end
-  Gem.find_files('firetower/plugins/*/init_v1.rb') do |file|
-    eval(File.read(file))
-  end
+include FireTower
 
-  description <<-"END"
+with_firetower_session("firetower", ) do |session|
+  Main do
+    $:.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
+    plugin_pattern = File.expand_path('../lib/firetower/plugins/*/init_v1.rb', File.dirname(__FILE__))
+    Dir.glob(plugin_pattern).each do |file|
+      eval(File.read(file))
+    end
+    Gem.find_files('firetower/plugins/*/init_v1.rb') do |file|
+      eval(File.read(file))
+    end
+
+    description <<-"END"
     A command-line interface to Campfire chats.
 
     #{program} provides two primary services: a command-line syntax for posting
@@ -21,26 +24,26 @@ Main do
     monitor any number of Campfire rooms on multiple accounts and take
     configurable actions when chat room events occur. Both usage modes share a
     common simple Ruby-based configuration file.
-  END
+    END
 
-  author 'Avdi Grimm <avdi@avdi.org>'
+    author 'Avdi Grimm <avdi@avdi.org>'
 
-  examples [
-    "#{program} setup",
-    "#{program} say 'hello, Campfire'",
-    "#{program} say subdomain=mycompany room='Watercooler' 'hello room'",
-    "echo 'hello, Campfire' | #{program} say",
-    "#{program} paste '2+2 => 4'",
-    "#{program} paste subdomain=mycompany room='Watercooler' 'foobar'",
-    "#{program} paste --from=sel",
-    "#{program} paste --from=clip",
-    "#{program} paste --from=file hello.rb",
-    "#{program} paste --from=stdin < hello.rb",
-    "#{program} start",
-    "#{program} stop"
-  ]
+    examples [
+      "#{program} setup",
+      "#{program} say 'hello, Campfire'",
+      "#{program} say subdomain=mycompany room='Watercooler' 'hello room'",
+      "echo 'hello, Campfire' | #{program} say",
+      "#{program} paste '2+2 => 4'",
+      "#{program} paste subdomain=mycompany room='Watercooler' 'foobar'",
+      "#{program} paste --from=sel",
+      "#{program} paste --from=clip",
+      "#{program} paste --from=file hello.rb",
+      "#{program} paste --from=stdin < hello.rb",
+      "#{program} start",
+      "#{program} stop"
+    ]
 
-  usage["CONFIGURATION"] = <<-"END"
+    usage["CONFIGURATION"] = <<-"END"
     #{program} is configured by editing the file
     $HOME/.firetower/firetower.conf. The file consists of Ruby code which is
     evaluated in the context of a Firetower::Session object. You can generate a
@@ -61,309 +64,295 @@ Main do
     of handlers can be stacked on a given event. And more advanced usage are
     possible; for instance, you can attach a Listener object to receive all
     types of events. In fact, this last is how plugins are implemented.
-  END
+    END
 
-  fattr(:config_path) { dir + 'firetower.conf'   }
-  fattr(:log_path)    { dir + 'firetower.log' }
-  fattr(:pid_path)    { dir + 'firetower.pid' }
+    fattr(:session)     { session }
+    fattr(:config_path) { dir + 'firetower.conf'   }
+    fattr(:log_path)    { dir + 'firetower.log' }
+    fattr(:pid_path)    { dir + 'firetower.pid' }
 
-  logger_level ::Logger::INFO
+    logger_level ::Logger::INFO
 
-  option('dir') do
-    description "Where to find/put config, data, and log files"
-    default {
-      File.join(
-        ENV.fetch('HOME'){Etc.getpwnam(Etc.getlogin).dir},
-        '.firetower')
-    }
-    attr{|dir| Pathname(dir.value) }
-  end
-
-  mixin :address do
-    keyword :subdomain do
-      optional
-      attr
-    end
-    keyword :room do
-      optional
-      attr
+    option('dir') do
+      description "Where to find/put config, data, and log files"
+      default {
+        File.join(
+          ENV.fetch('HOME'){Etc.getpwnam(Etc.getlogin).dir},
+          '.firetower')
+      }
+      attr{|dir| Pathname(dir.value) }
     end
 
-    def selected_room(session)
-      if params[:subdomain].given? && params[:room].given?
-        session.accounts[subdomain].rooms[params[:room].values[0]]
-      else
-        session.default_room
+    mixin :address do
+      keyword :subdomain do
+        optional
+        attr
       end
-    end
-  end
-
-  mode :say do
-    description "Say something in a campfire chat room"
-    mixin :address
-    argument :text do
-      optional
-      attr{|text| text.given? ? text.value : $stdin.read }
-    end
-
-    def run
-      with_session do |session|
-        room = selected_room(session)
-        room.account.say!(room.name, text)
-        # account = session.accounts[subdomain]
-        # account.say!(room_name, text)
+      keyword :room do
+        optional
+        attr
       end
-    end
-  end
 
-  mode :paste do
-    description "Paste a pre-formatted message from command line, STDIN,"\
-                " selection, clipboard, or file"
-    mixin :address
-
-    argument "text_or_filename" do
-      description "Text to paste or file to paste from"
-      optional
-      attr
-    end
-
-    option 'from' do
-      description "Source of text. One of: clip|sel|stdin|file|arg"
-      argument :required
-      validate{|from| %w[clip sel stdin file arg auto].include?(from)}
-      default 'auto'
-      attr
-    end
-
-    def run
-      with_session do |session|
-        room = selected_room(session)
-        room.account.paste!(room.name, text)
-      end
-    end
-
-    def text
-      source = case from
-               when 'auto' then
-                 if params['text_or_filename'].given?
-                   'arg'
-                 elsif !$stdin.tty?
-                   'stdin'
-                 else
-                   'clip'
-                 end
-               else
-                 from
-               end
-
-      case source
-      when 'arg'   then params['text_or_filename'].value
-      when 'sel'   then `xsel --primary`
-      when 'clip'  then `xsel --clipboard`
-      when 'file'  then File.read(params['text_or_filename'].value)
-      when 'stdin' then $stdin.read
-      else
-        raise "Unknown text source #{from}"
-      end
-    end
-  end
-
-  mode :rooms do
-    description "List rooms"
-    argument :subdomain do
-      optional
-      attr
-    end
-
-    def run
-      with_session do |session|
-        accounts = if params[:subdomain].given?
-                     [session.accounts[subdomain]]
-                   else
-                     session.accounts.values
-                   end
-        accounts.each do |account|
-          puts "#{account.subdomain}:"
-          account.rooms.keys.each do |room_name|
-            puts "\t#{room_name}"
-          end
+      def selected_room(session)
+        if params[:subdomain].given? && params[:room].given?
+          session.accounts[subdomain].rooms[params[:room].values[0]]
+        else
+          session.default_room
         end
       end
     end
-  end
 
-  mode :account do
-    description "Prefix for accont-related commands"
-    mode :list do
-      description "List accounts"
+    mode :say do
+      description "Say something in a campfire chat room"
+      mixin :address
+      argument :text do
+        optional
+        attr{|text| text.given? ? text.value : $stdin.read }
+      end
+
+      def run
+          room = selected_room(session)
+          room.account.say!(room.name, text)
+          # account = session.accounts[subdomain]
+          # account.say!(room_name, text)
+      end
+    end
+
+    mode :paste do
+      description "Paste a pre-formatted message from command line, STDIN,"\
+      " selection, clipboard, or file"
+      mixin :address
+
+      argument "text_or_filename" do
+        description "Text to paste or file to paste from"
+        optional
+        attr
+      end
+
+      option 'from' do
+        description "Source of text. One of: clip|sel|stdin|file|arg"
+        argument :required
+        validate{|from| %w[clip sel stdin file arg auto].include?(from)}
+        default 'auto'
+        attr
+      end
 
       def run
         with_session do |session|
-          session.accounts.values.each do |account|
-            puts account.subdomain
+          room = selected_room(session)
+          room.account.paste!(room.name, text)
+        end
+      end
+
+      def text
+        source = case from
+                 when 'auto' then
+                   if params['text_or_filename'].given?
+                     'arg'
+                   elsif !$stdin.tty?
+                     'stdin'
+                   else
+                     'clip'
+                   end
+                 else
+                   from
+                 end
+
+        case source
+        when 'arg'   then params['text_or_filename'].value
+        when 'sel'   then `xsel --primary`
+        when 'clip'  then `xsel --clipboard`
+        when 'file'  then File.read(params['text_or_filename'].value)
+        when 'stdin' then $stdin.read
+        else
+          raise "Unknown text source #{from}"
+        end
+      end
+    end
+
+    mode :rooms do
+      description "List rooms"
+      argument :subdomain do
+        optional
+        attr
+      end
+
+      def run
+        with_session do |session|
+          accounts = if params[:subdomain].given?
+                       [session.accounts[subdomain]]
+                     else
+                       session.accounts.values
+                     end
+          accounts.each do |account|
+            puts "#{account.subdomain}:"
+            account.rooms.keys.each do |room_name|
+              puts "\t#{room_name}"
+            end
           end
         end
       end
     end
-  end
 
-  mode :start do
-    description "Start the listener daemon"
+    mode :account do
+      description "Prefix for accont-related commands"
+      mode :list do
+        description "List accounts"
 
-    option 'detach' do
-      description "Controls whether the server process will daemonize"
-      optional
-      argument :required
-      default true
-      cast :bool
-      attr
-    end
-
-    def run
-      if detach
-        firetower_daemon.startup
-        puts "Firetower is vigilantly scanning the treetops"
-      else
-        logger ::Logger.new($stdout)
-        start_server(:logger => logger)
+        def run
+          with_session do |session|
+            session.accounts.values.each do |account|
+              puts account.subdomain
+            end
+          end
+        end
       end
     end
-  end
 
-  mode :stop do
-    description "Stop the listener daemon"
+    mode :start do
+      description "Start the listener daemon"
 
-    def run
-      firetower_daemon.shutdown
-      puts "Firetower is no longer on duty"
+      option 'detach' do
+        description "Controls whether the server process will daemonize"
+        optional
+        argument :required
+        default true
+        cast :bool
+        attr
+      end
+
+      def run
+        if detach
+          firetower_daemon.startup
+          puts "Firetower is vigilantly scanning the treetops"
+        else
+          logger ::Logger.new($stdout)
+          start_server(:logger => logger)
+        end
+      end
     end
-  end
 
-  mode :setup do
-    description "Configure Firetower for first use"
+    mode :stop do
+      description "Stop the listener daemon"
 
-    def run
-      require 'erb'
-      hl = HighLine.new
-      exit_failure unless !config_path.exist? || hl.ask(<<"EOS")
+      def run
+        firetower_daemon.shutdown
+        puts "Firetower is no longer on duty"
+      end
+    end
+
+    mode :setup do
+      description "Configure Firetower for first use"
+
+      def run
+        require 'erb'
+        hl = HighLine.new
+        exit_failure unless !config_path.exist? || hl.ask(<<"EOS")
 A configuration already exists at #{config_path}. Are you sure you want to
 overwrite it?
 EOS
-      exit_failure if RUBY_PLATFORM =~ /darwin/ and !system('growlnotify -v') and !(puts(<<"EOS"))
+        exit_failure if RUBY_PLATFORM =~ /darwin/ and !system('growlnotify -v') and !(puts(<<"EOS"))
 You must first install growlnotify from the Growl package installer and ensure
 'Listen for incoming notifications' is checked in the Preference pane.
 EOS
-      subdomain = hl.ask <<EOS
+        subdomain = hl.ask <<EOS
 What is your Campfire subdomain? If your Campfire address is
 http://mycompany.campfirenow.com, your subdomain is "mycompany" (without the
 quotes).
 EOS
-      token = hl.ask <<"EOS"
+        token = hl.ask <<"EOS"
 Please enter your Campfire API token. You can find your token at
 http://#{subdomain}.campfirenow.com/member/edit
 EOS
-      use_ssl    = hl.agree("Use SSL when connecting to Campfire?")
-      rooms_url  = "http#{use_ssl ? 's' : ''}://#{subdomain}.campfirenow.com/rooms.json"
-      response   = open(rooms_url, :http_basic_authentication => [token, 'x']).read
-      room_list  = JSON.parse(response)['rooms']
-      room_names = []
-      catch(:done) do
-        loop do
-          hl.choose do |menu|
-            menu.prompt = "Choose a room to join at startup: "
-            room_list.each do |room|
-              menu.choice(room['name']){ room_names << room['name']}
+        use_ssl    = hl.agree("Use SSL when connecting to Campfire?")
+        rooms_url  = "http#{use_ssl ? 's' : ''}://#{subdomain}.campfirenow.com/rooms.json"
+        response   = open(rooms_url, :http_basic_authentication => [token, 'x']).read
+        room_list  = JSON.parse(response)['rooms']
+        room_names = []
+        catch(:done) do
+          loop do
+            hl.choose do |menu|
+              menu.prompt = "Choose a room to join at startup: "
+              room_list.each do |room|
+                menu.choice(room['name']){ room_names << room['name']}
+              end
+              menu.choice("Done"){ throw :done }
             end
-            menu.choice("Done"){ throw :done }
           end
         end
-      end
-      template_path = File.expand_path(
-        '../lib/firetower/firetower.conf.erb',
-        File.dirname(__FILE__))
-      template = ERB.new(File.read(template_path), nil, "<>")
-      configuration = template.result(binding)
-      hl.say "The following configuration will be written to #{config_path}:\n\n"
-      hl.say configuration.gsub(/^/, "    ")
-      exit_failure unless hl.agree("Write new configuration?")
-      config_path.open('w+') do |config_file|
-        config_file.write(configuration)
-      end
-      hl.say "#{program} is now configured!"
-    end
-  end
-
-  mode :log do
-    mode :tail do
-      description "Live view of the server log"
-
-      def run
-        exec('tail', '-f', log_path.to_s)
+        template_path = File.expand_path(
+          '../lib/firetower/firetower.conf.erb',
+          File.dirname(__FILE__))
+        template = ERB.new(File.read(template_path), nil, "<>")
+        configuration = template.result(binding)
+        hl.say "The following configuration will be written to #{config_path}:\n\n"
+        hl.say configuration.gsub(/^/, "    ")
+        exit_failure unless hl.agree("Write new configuration?")
+        config_path.open('w+') do |config_file|
+          config_file.write(configuration)
+        end
+        hl.say "#{program} is now configured!"
       end
     end
 
-    mode :view do
-      description "Open server log in $PAGER"
+    mode :log do
+      mode :tail do
+        description "Live view of the server log"
 
-      def run
-        exec(
-          ENV.fetch('PAGER'){ENV.fetch('EDITOR'){'less'}},
-          log_path.to_s)
+        def run
+          exec('tail', '-f', log_path.to_s)
+        end
+      end
+
+      mode :view do
+        description "Open server log in $PAGER"
+
+        def run
+          exec(
+            ENV.fetch('PAGER'){ENV.fetch('EDITOR'){'less'}},
+            log_path.to_s)
+        end
       end
     end
-  end
 
-  def run
-    help!
-  end
-
-  def firetower_daemon
-    Servolux::Daemon.new(
-      :name            => File.basename($PROGRAM_NAME),
-      :logger          => logger,
-      :log_file        => log_path.to_s,
-      :pid_file        => pid_path.to_s,
-      :startup_command => lambda { start_server })
-  end
-
-  def start_server(options={})
-    with_session(:server, options) do |session|
-      server = Firetower::Server.new(session,
-        {
-          :log_path => log_path,
-          :pid_path => pid_path
-        }.merge(options))
-      server.run
+    def run
+      help!
     end
-  end
 
-  def with_session(kind=:command, options={})
-    session = Firetower::Session.new(kind, options)
-    if config_path.exist?
-      session.instance_eval(config_path.read, config_path.to_s, 1)
-    else
-      puts "Please run '#{program} setup' to configure #{program}"
-      exit_failure
+    def firetower_daemon
+      Servolux::Daemon.new(
+        :name            => File.basename($PROGRAM_NAME),
+        :logger          => logger,
+        :log_file        => log_path.to_s,
+        :pid_file        => pid_path.to_s,
+        :startup_command => lambda { start_server })
     end
-    session.execute_hook(:startup, session)
-    yield session
-    session.execute_hook(:shutdown, session)
-  end
 
-  def before_run
-    self.logger.level = ::Logger::INFO
-    # load_plugins!
-    dir.mkpath
-  end
+    def start_server(options={})
+      with_session(:server, options) do |session|
+        server = Firetower::Server.new(session,
+          {
+            :log_path => log_path,
+            :pid_path => pid_path
+          }.merge(options))
+        server.run
+      end
+    end
 
-  def load_plugins!
-    Gem.find_files('firetower/plugins/*/init_v1').each do |path|
-      path =~ %r{firetower/plugins/(.*)/}
-      debug "Loading plugin #{$1}"
-      load path
+    def before_run
+      self.logger.level = ::Logger::INFO
+      # load_plugins!
+      dir.mkpath
+      session.load_user_config!(config_path)
+    end
+
+    def load_plugins!
+      Gem.find_files('firetower/plugins/*/init_v1').each do |path|
+        path =~ %r{firetower/plugins/(.*)/}
+        debug "Loading plugin #{$1}"
+        load path
+      end
     end
   end
 end
-
-
 
