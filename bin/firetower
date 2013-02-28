@@ -297,7 +297,7 @@ EOS
           hl.choose do |menu|
             menu.prompt = "Choose a room to join at startup: "
             room_list.each do |room|
-              menu.choice(room['name']){ room_names << room['name']}
+              menu.choice(room['name']){ room_names << room['name'] unless room_names.include? room['name']}
             end
             menu.choice("Done"){ throw :done }
           end
